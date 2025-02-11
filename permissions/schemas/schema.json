@@ -305,6 +305,26 @@
           "const": "deny-ping"
         },
         {
+          "description": "Enables the retrieve command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-retrieve"
+        },
+        {
+          "description": "Denies the retrieve command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-retrieve"
+        },
+        {
+          "description": "Enables the store command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-store"
+        },
+        {
+          "description": "Denies the store command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-store"
+        },
+        {
           "description": "Default permissions for the plugin",
           "type": "string",
           "const": "default"
