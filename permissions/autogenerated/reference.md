@@ -2,7 +2,7 @@
 
 Default permissions for the plugin
 
-- `allow-ping`
+- `allow-remove`
 - `allow-retrieve`
 - `allow-store`
 
@@ -18,12 +18,12 @@ Default permissions for the plugin
 <tr>
 <td>
 
-`keystore:allow-ping`
+`keystore:allow-remove`
 
 </td>
 <td>
 
-Enables the ping command without any pre-configured scope.
+Enables the remove command without any pre-configured scope.
 
 </td>
 </tr>
@@ -31,12 +31,12 @@ Enables the ping command without any pre-configured scope.
 <tr>
 <td>
 
-`keystore:deny-ping`
+`keystore:deny-remove`
 
 </td>
 <td>
 
-Denies the ping command without any pre-configured scope.
+Denies the remove command without any pre-configured scope.
 
 </td>
 </tr>

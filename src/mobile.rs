@@ -25,12 +25,6 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Keystore<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Keystore<R> {
-    pub fn ping(&self, payload: PingRequest) -> crate::Result<PingResponse> {
-        self.0
-            .run_mobile_plugin("ping", payload)
-            .map_err(Into::into)
-    }
-
     pub fn store(&self, payload: StoreRequest) -> crate::Result<StoreResponse> {
         self.0
             .run_mobile_plugin("store", payload)
@@ -46,5 +40,11 @@ impl<R: Runtime> Keystore<R> {
         // Ok(RetrieveResponse {
         //     password: Some(password),
         // })
+    }
+
+    pub fn remove(&self, payload: RemoveRequest) -> crate::Result<RemoveResponse> {
+        self.0
+            .run_mobile_plugin("remove", payload)
+            .map_err(Into::into)
     }
 }

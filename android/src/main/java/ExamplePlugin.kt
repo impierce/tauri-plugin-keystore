@@ -1,6 +1,8 @@
 package app.tauri.keystore
 
 import android.app.Activity
+import android.content.Context
+import android.content.SharedPreferences
 //import android.hardware.biometrics.BiometricPrompt
 import androidx.biometric.BiometricPrompt
 import java.security.KeyStore
@@ -26,15 +28,13 @@ import javax.crypto.spec.GCMParameterSpec
 
 private const val KEY_ALIAS = "unime_dev"
 private const val ANDROID_KEYSTORE = "AndroidKeyStore"
-
-@InvokeArg
-class PingArgs {
-    var value: String? = null
-}
+private const val SHARED_PREFERENCES_NAME = "secure_storage"
 
 @InvokeArg
 class StoreRequest {
     lateinit var value: String
+    // TODO: use this instead?
+    // var value: String? = null
 }
 
 @InvokeArg
@@ -46,15 +46,6 @@ class RetrieveRequest {
 @TauriPlugin
 class ExamplePlugin(private val activity: Activity) : Plugin(activity) {
     private val implementation = Example()
-
-    @Command
-    fun ping(invoke: Invoke) {
-        val args = invoke.parseArgs(PingArgs::class.java)
-
-        val ret = JSObject()
-        ret.put("value", implementation.pong(args.value ?: "default value :("))
-        invoke.resolve(ret)
-    }
 
     @Command
     fun store(invoke: Invoke) {
@@ -93,6 +84,16 @@ class ExamplePlugin(private val activity: Activity) : Plugin(activity) {
                             e.printStackTrace()
                             Logger.error("Encryption failed: ${e.message}")
                         }
+                    }
+
+                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                        super.onAuthenticationError(errorCode, errString)
+                        invoke.reject("Authentication error: $errorCode")
+                    }
+
+                    override fun onAuthenticationFailed() {
+                        super.onAuthenticationFailed()
+                        invoke.reject("Authentication failed")
                     }
                 })
 
@@ -176,10 +177,10 @@ class ExamplePlugin(private val activity: Activity) : Plugin(activity) {
         return cipher
     }
 
-    // Stores the IV and ciphertext in SharedPreferences (for example purposes).
+    // Stores the IV and ciphertext in SharedPreferences.
     private fun storeCiphertext(iv: ByteArray, ciphertext: ByteArray) {
-        val prefs =
-            activity.getSharedPreferences("secure_storage", android.content.Context.MODE_PRIVATE)
+        val prefs: SharedPreferences =
+            activity.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
         val editor = prefs.edit()
         val ivEncoded = Base64.encodeToString(iv, Base64.DEFAULT)
         val ctEncoded = Base64.encodeToString(ciphertext, Base64.DEFAULT)
@@ -192,9 +193,75 @@ class ExamplePlugin(private val activity: Activity) : Plugin(activity) {
     fun retrieve(invoke: Invoke) {
         val args = invoke.parseArgs(RetrieveRequest::class.java)
 
-        val ret = JSObject()
-        ret.put("value", "sup3rSecr3t")
-        invoke.resolve(ret)
+        val cipherData = readCipherData()
+        if (cipherData == null) {
+            invoke.reject("No cipher data found in SharedPreferences", "001")
+            return
+        }
+
+        val (iv, ciphertext) = cipherData
+
+        val cipher = try {
+            getDecryptionCipher(iv)
+        } catch (e: Exception) {
+            invoke.reject("Error initializing cipher: ${e.message}", "001")
+            return
+        }
+
+        val executor = ContextCompat.getMainExecutor(activity)
+        val biometricPrompt = BiometricPrompt(activity as androidx.fragment.app.FragmentActivity, executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    try {
+                        // Use the cipher from the authentication result (which is now unlocked).
+                        val authCipher = result.cryptoObject?.cipher
+                            ?: throw IllegalStateException("Cipher not available after authentication")
+                        val decryptedBytes = authCipher.doFinal(ciphertext)
+                        val cleartext = String(decryptedBytes, Charset.forName("UTF-8"))
+
+                        val ret = JSObject()
+                        ret.put("value", cleartext)
+                        invoke.resolve(ret)
+                    } catch (e: Exception) {
+                        invoke.reject("Decryption failed: ${e.message}")
+                    }
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    invoke.reject("Authentication error: $errorCode")
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    invoke.reject("Authentication failed")
+                }
+            })
+
+        // Build the prompt info.
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Biometric Authentication")
+            .setSubtitle("Authenticate to decrypt your secret")
+            .setNegativeButtonText("Cancel")
+            .build()
+
+        // Launch the biometric prompt.
+        biometricPrompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(cipher))
+    }
+
+    // Reads the IV and ciphertext from SharedPreferences.
+    private fun readCipherData(): Pair<ByteArray, ByteArray>? {
+        val prefs: SharedPreferences =
+            activity.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+        val ivEncoded: String? = prefs.getString("iv", null)
+        val ctEncoded: String? = prefs.getString("ciphertext", null)
+        if (ivEncoded == null || ctEncoded == null) {
+            return null
+        }
+        val iv = Base64.decode(ivEncoded, Base64.DEFAULT)
+        val ciphertext = Base64.decode(ctEncoded, Base64.DEFAULT)
+        return Pair(iv, ciphertext)
     }
 
     private fun getDecryptionCipher(iv: ByteArray): Cipher {

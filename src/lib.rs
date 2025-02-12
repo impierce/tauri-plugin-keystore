@@ -36,9 +36,9 @@ impl<R: Runtime, T: Manager<R>> crate::KeystoreExt<R> for T {
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("keystore")
         .invoke_handler(tauri::generate_handler![
-            commands::ping,
-            commands::store,
-            commands::retrieve
+            commands::remove,
+            commands::retrieve,
+            commands::store
         ])
         .setup(|app, api| {
             #[cfg(mobile)]

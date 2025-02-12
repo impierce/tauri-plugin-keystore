@@ -14,23 +14,24 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Keystore<R: Runtime>(AppHandle<R>);
 
 impl<R: Runtime> Keystore<R> {
-    pub fn ping(&self, payload: PingRequest) -> crate::Result<PingResponse> {
-        Ok(PingResponse {
-            value: Some(format!("{:?}-desktop", payload.value)),
-        })
-    }
-
     pub fn store(&self, payload: StoreRequest) -> crate::Result<StoreResponse> {
         let entry = keyring::Entry::new("unime-dev", "tester").unwrap();
         entry.set_password(&payload.value).unwrap();
         Ok(StoreResponse {})
     }
 
+    // TODO: remove unwrap() calls
     pub fn retrieve(&self, payload: RetrieveRequest) -> crate::Result<RetrieveResponse> {
         let entry = keyring::Entry::new(&payload.service, &payload.user).unwrap();
         let password = entry.get_password().unwrap();
         Ok(RetrieveResponse {
             value: Some(password),
         })
+    }
+
+    pub fn remove(&self, payload: RemoveRequest) -> crate::Result<RemoveResponse> {
+        let entry = keyring::Entry::new(&payload.service, &payload.user).unwrap();
+        entry.delete_credential().unwrap();
+        Ok(RemoveResponse {})
     }
 }
