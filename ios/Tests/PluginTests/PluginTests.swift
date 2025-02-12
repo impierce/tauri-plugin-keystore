@@ -1,8 +1,8 @@
 import XCTest
-@testable import ExamplePlugin
+@testable import KeystorePlugin
 
-final class ExamplePluginTests: XCTestCase {
+final class KeystorePluginTests: XCTestCase {
     func testExample() throws {
-        let plugin = ExamplePlugin()
+        let plugin = KeystorePlugin()
     }
 }

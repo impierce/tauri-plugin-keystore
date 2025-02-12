@@ -7,7 +7,7 @@ class PingArgs: Decodable {
   let value: String?
 }
 
-class ExamplePlugin: Plugin {
+class KeystorePlugin: Plugin {
   @objc public func ping(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(PingArgs.self)
     invoke.resolve(["value": args.value ?? ""])
@@ -16,5 +16,5 @@ class ExamplePlugin: Plugin {
 
 @_cdecl("init_plugin_keystore")
 func initPlugin() -> Plugin {
-  return ExamplePlugin()
+  return KeystorePlugin()
 }
