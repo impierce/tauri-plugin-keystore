@@ -6,10 +6,6 @@ pub struct StoreRequest {
     pub value: String,
 }
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StoreResponse {}
-
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RetrieveRequest {
@@ -29,7 +25,3 @@ pub struct RemoveRequest {
     pub service: String,
     pub user: String,
 }
-
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RemoveResponse {}

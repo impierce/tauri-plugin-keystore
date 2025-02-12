@@ -25,7 +25,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Keystore<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Keystore<R> {
-    pub fn store(&self, payload: StoreRequest) -> crate::Result<StoreResponse> {
+    pub fn store(&self, payload: StoreRequest) -> crate::Result<()> {
         self.0
             .run_mobile_plugin("store", payload)
             .map_err(Into::into)
@@ -42,7 +42,7 @@ impl<R: Runtime> Keystore<R> {
         // })
     }
 
-    pub fn remove(&self, payload: RemoveRequest) -> crate::Result<RemoveResponse> {
+    pub fn remove(&self, payload: RemoveRequest) -> crate::Result<()> {
         self.0
             .run_mobile_plugin("remove", payload)
             .map_err(Into::into)
