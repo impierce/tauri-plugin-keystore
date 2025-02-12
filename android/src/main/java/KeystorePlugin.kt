@@ -19,9 +19,7 @@ import javax.crypto.KeyGenerator
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
 import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
@@ -44,7 +42,7 @@ class RetrieveRequest {
 }
 
 @TauriPlugin
-class ExamplePlugin(private val activity: Activity) : Plugin(activity) {
+class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
     private val implementation = Example()
 
     @Command
@@ -271,5 +269,16 @@ class ExamplePlugin(private val activity: Activity) : Plugin(activity) {
         val spec = GCMParameterSpec(128, iv)
         cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
         return cipher
+    }
+
+    @Command
+    fun remove(invoke: Invoke) {
+        try {
+            val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+            keyStore.deleteEntry(KEY_ALIAS)
+            invoke.resolve()
+        } catch (e: Exception) {
+            invoke.reject("Could not delete entry from KeyStore: ${e.localizedMessage}")
+        }
     }
 }
