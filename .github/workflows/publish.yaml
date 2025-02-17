@@ -1,0 +1,38 @@
+name: publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish_crates_io:
+    name: publish (crates.io)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      #   - name: cargo login
+      #     run: cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: cargo publish
+        run: cargo publish --dry-run
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  publish_npmjs_com:
+    name: publish (npmjs.com)
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # use of OIDC for npm provenance
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - run: pnpm build
+      - name: pnpm publish
+        # run: npm publish --provenance --access public
+        run: pnpm publish --access public --dry-run
+        env:
+          NPM_CONFIG_PROVENANCE: true
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
