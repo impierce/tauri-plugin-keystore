@@ -6,12 +6,12 @@ Interact with the device-native key storage (Android Keystore, iOS Keychain).
 > This plugin is scoped to interact with the device-specific keystore. It assumes that biometrics are set up on the user's device and performs no preflight check before trying to interact with the secrets. You should use the [official biometric plugin](https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/biometric) to `checkStatus` before, if you want to make sure.
 
 | Platform | Supported |
-| -------- | --------- |
-| Linux    | ❌        |
-| Windows  | ❌        |
-| macOS    | ❌        |
-| Android  | ✅        |
-| iOS      | ✅        |
+| -------- | :-------: |
+| Linux    |    ❌     |
+| Windows  |    ❌     |
+| macOS    |    ❌     |
+| Android  |    ✅     |
+| iOS      |    ✅     |
 
 ## Installation
 
