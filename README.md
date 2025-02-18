@@ -1,5 +1,13 @@
 # Tauri Plugin Keystore
 
+[![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
+
+![Crates.io Version](https://img.shields.io/crates/v/tauri-plugin-keystore)
+
+![NPM Version](https://img.shields.io/npm/v/%40impierce%2Ftauri-plugin-keystore)
+
+---
+
 Interact with the device-native key storage (Android Keystore, iOS Keychain).
 
 > [!NOTE]  
@@ -15,26 +23,28 @@ Interact with the device-native key storage (Android Keystore, iOS Keychain).
 
 ## Installation
 
-`src-tauri/Cargo.toml`
+Add the following to your `src-tauri/Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-keystore = "0.1.0"
+tauri-plugin-keystore = "2"
 ```
 
-Install the JS guest bindings:
+Then install the JS guest bindings:
 
 ```shell
 pnpm add @impierce/tauri-plugin-keystore
 ```
 
+_This also works for `npm` and `yarn`._
+
 ## Requirements
 
 - This plugin requires a **Rust version of 1.77.2 or higher**.
 - The minimum supported Tauri version is **2.0.0**.
-- For Android, only Android 9 (**API level 28**) and higher are supported.
+- Android 9 (**API level 28**) and higher are supported.
 
-## Example
+## Usage
 
 First you need to register the plugin with your Tauri app:
 
@@ -59,7 +69,7 @@ const password = await retrieve();
 await remove();
 ```
 
-The provided functions will fail if the device has no biometrics set up, so you should check the biometric status with `plugin-biometric` _(official)_ before using them:
+The provided functions will fail if the device has no biometrics set up, so you should check the biometric status with the official `tauri-plugin-biometric` before using them:
 
 ```typescript
 import { checkStatus, type Status } from "@tauri-apps/plugin-biometric";
