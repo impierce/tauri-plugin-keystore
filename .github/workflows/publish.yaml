@@ -42,7 +42,7 @@ jobs:
       - run: pnpm build
       - name: pnpm publish
         # run: npm publish --provenance --access public
-        run: pnpm publish --access public --dry-run
+        run: pnpm publish --access public --publish-branch alpha --dry-run
         env:
           NPM_CONFIG_PROVENANCE: true
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
