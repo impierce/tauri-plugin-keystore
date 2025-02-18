@@ -77,3 +77,34 @@ import { checkStatus, type Status } from "@tauri-apps/plugin-biometric";
 const biometricsStatus: Status = await checkStatus();
 assert(biometricsStatus.biometryType !== BiometryType.None);
 ```
+
+## Release strategy
+
+This plugin is semantically versioned, but there are some caveats:
+
+- Versioning starts at `v2.0.0` to match the Tauri version it supports _(common practice for Tauri plugins)_.
+- Breaking changes are highly discouraged as they would make the plugin go out-of-sync with the Tauri major version.
+
+#### Conflicting release approaches
+
+The next version is determined by `semantic-release` which does [not recommend making commits during the release process](https://semantic-release.gitbook.io/semantic-release/support/faq#making-commits-during-the-release-process-adds-significant-complexity).
+For **npmjs.com** this is circumvented by `semantic-release` by pushing the version in the release metadata and not in the `version` field of the `package.json`.
+However, **crates.io** uses the `version` field from `Cargo.toml` to determine the version.
+
+#### Solution
+
+This repository provides a workaround for this issue by using a semi-automated release process:
+
+1. Run the **release --dry-run** Action to let `semantic-release` determine the next version. Take note of the version it produces.
+
+2. Manually update the `version` fields in the `Cargo.toml` and `package.json` files.
+
+3. Commit the changes using the following commit message _(replace the version)_:
+
+```
+build: release version v1.1.0-alpha.1
+```
+
+4. Open a pull request with the same title as the commit message.
+
+5. After the PR is merged, the actual **release** Action will run which creates a new release on GitHub and adds a git tag. This is followed by the **publish** Action which publishes the packages to npm and crates.io.
