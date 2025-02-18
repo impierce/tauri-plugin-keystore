@@ -1,8 +1,8 @@
 {
-  "name": "tauri-plugin-keystore-api",
-  "version": "0.1.0",
-  "author": "You",
-  "description": "",
+  "name": "@impierce/tauri-plugin-keystore",
+  "version": "0.0.0-semantically-released",
+  "author": "daniel-mader",
+  "description": "Interact with the device-native key storage (Android Keystore, iOS Keychain).",
   "type": "module",
   "types": "./dist-js/index.d.ts",
   "main": "./dist-js/index.cjs",
@@ -29,5 +29,14 @@
     "rollup": "^4.9.6",
     "typescript": "^5.3.3",
     "tslib": "^2.6.2"
-  }
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/impierce/tauri-plugin-keystore.git"
+  },
+  "bugs": {
+    "url": "https://github.com/impierce/tauri-plugin-keystore/issues"
+  },
+  "homepage": "https://github.com/impierce/tauri-plugin-keystore#readme"
 }
