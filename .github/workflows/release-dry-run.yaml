@@ -1,13 +1,13 @@
-name: release
+name: release --dry-run
 
 on:
   workflow_dispatch:
-#   push:
-#     branches:
-#       - main
-#       - next
-#       - beta
-#       - alpha
+  push:
+    branches:
+      - main
+      - next
+      - beta
+      - alpha
 
 jobs:
   release:
@@ -28,6 +28,6 @@ jobs:
           node-version: "lts/*"
 
       - name: semantic-release
-        run: npx semantic-release@24
+        run: npx semantic-release@24 --dry-run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
