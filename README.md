@@ -1,8 +1,8 @@
 # Tauri Plugin Keystore
 
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
-![Crates.io Version](https://img.shields.io/crates/v/tauri-plugin-keystore)
-![NPM Version](https://img.shields.io/npm/v/%40impierce%2Ftauri-plugin-keystore)
+[![Crates.io Version](https://img.shields.io/crates/v/tauri-plugin-keystore)](https://crates.io/crates/tauri-plugin-keystore)
+[![NPM Version](https://img.shields.io/npm/v/%40impierce%2Ftauri-plugin-keystore)](https://www.npmjs.com/package/@impierce/tauri-plugin-keystore)
 
 ---
 
