@@ -109,4 +109,7 @@ build: release version v1.1.0-alpha.1
 
 6. The **publish** Action then publishes the packages to npm and crates.io.
 
-<!-- TODO: possibly `semantic-release-cargo` can solve this problem: https://crates.io/crates/semantic-release-cargo -->
+<!-- TODO: possibly one of the following can solve this problem:
+ - `semantic-release-cargo`: https://crates.io/crates/semantic-release-cargo
+ - `release-please-action`: https://github.com/googleapis/release-please-action
+ -->
