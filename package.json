@@ -1,6 +1,6 @@
 {
   "name": "@impierce/tauri-plugin-keystore",
-  "version": "0.0.0-semantically-released",
+  "version": "2.1.0-alpha.1",
   "author": "daniel-mader",
   "description": "Interact with the device-native key storage (Android Keystore, iOS Keychain).",
   "type": "module",
