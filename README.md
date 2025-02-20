@@ -1,9 +1,7 @@
 # Tauri Plugin Keystore
 
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
-
 ![Crates.io Version](https://img.shields.io/crates/v/tauri-plugin-keystore)
-
 ![NPM Version](https://img.shields.io/npm/v/%40impierce%2Ftauri-plugin-keystore)
 
 ---
@@ -11,7 +9,7 @@
 Interact with the device-native key storage (Android Keystore, iOS Keychain).
 
 > [!NOTE]  
-> This plugin is scoped to interact with the device-specific keystore. It assumes that biometrics are set up on the user's device and performs no preflight check before trying to interact with the secrets. You should use the [official biometric plugin](https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/biometric) to `checkStatus` before, if you want to make sure.
+> This plugin is scoped to interact with the device-specific keystore. It assumes that biometrics are set up on the user's device and performs no preflight check before trying to interact with the keystore. You should use the official [biometric plugin](https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/biometric) to `checkStatus` before, if you want to make sure (see [Usage](#usage) below).
 
 | Platform | Supported |
 | -------- | :-------: |
