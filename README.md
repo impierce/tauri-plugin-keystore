@@ -95,7 +95,7 @@ This repository provides a workaround for this issue by using a **semi-automated
 
 1. Run the **release --dry-run** Action to let `semantic-release` determine the next version. Take note of the version it produces.
 
-2. Manually update the `version` fields in the `Cargo.toml` and `package.json` files.
+2. Manually update the `version` fields in the `Cargo.toml` and `package.json` files (omit the `"v"`, so just `2.1.0` instead of `v2.1.0`).
 
 3. Commit the changes using the following commit message _(replace the version)_:
 
