@@ -35,11 +35,6 @@ impl<R: Runtime> Keystore<R> {
         self.0
             .run_mobile_plugin("retrieve", payload)
             .map_err(Into::into)
-        // let entry = keyring::Entry::new(&payload.service, &payload.user).unwrap();
-        // let password = entry.get_password().unwrap();
-        // Ok(RetrieveResponse {
-        //     password: Some(password),
-        // })
     }
 
     pub fn remove(&self, payload: RemoveRequest) -> crate::Result<()> {
