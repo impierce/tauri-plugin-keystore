@@ -3,6 +3,7 @@ name: build
 on:
   workflow_dispatch:
   pull_request:
+  push:
 
 jobs:
   cargo_build:
@@ -28,7 +29,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: ./gradlew build
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: "gradle"
+          cache-dependency-path: | # optional
+            android/*.gradle*
+            android/**/gradle-wrapper.properties
+      - run: ./gradlew build --no-daemon
 
   build_ios:
     name: build iOS plugin
