@@ -24,21 +24,34 @@ import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-private const val KEY_ALIAS = "unime_dev"
 private const val ANDROID_KEYSTORE = "AndroidKeyStore"
+// TODO: read from args?
 private const val SHARED_PREFERENCES_NAME = "secure_storage"
+
+// TODO: introduce "list all"? (for debugging)
 
 @InvokeArg
 class StoreRequest {
+    lateinit var keyAlias: String
     lateinit var value: String
     // TODO: use this instead?
     // var value: String? = null
+    // TODO: refactor: create Prompt class and @JsonDeserialize it
+    lateinit var promptTitle: String
+    lateinit var promptSubtitle: String
+    lateinit var promptNegativeButtonText: String
 }
 
 @InvokeArg
 class RetrieveRequest {
     lateinit var service: String
     lateinit var user: String
+    lateinit var keyAlias: String
+}
+
+@InvokeArg
+class RemoveRequest {
+    lateinit var keyAlias: String
 }
 
 @TauriPlugin
@@ -47,13 +60,13 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
 
     @Command
     fun store(invoke: Invoke) {
-        val storeRequest = invoke.parseArgs(StoreRequest::class.java)
+        val args = invoke.parseArgs(StoreRequest::class.java)
 
         // Generate Key (biometrics-protected)
-        generateBiometricProtectedKey()
+        generateBiometricProtectedKey(args.keyAlias)
 
         // Get cipher for encryption
-        val cipher = getEncryptionCipher()
+        val cipher = getEncryptionCipher(args.keyAlias)
 
         // Wrap the Cipher in a CryptoObject.
         val cryptoObject = BiometricPrompt.CryptoObject(cipher)
@@ -72,7 +85,7 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
 
                             // Encrypt the value.
                             val ciphertext =
-                                authCipher.doFinal(storeRequest.value.toByteArray(Charset.forName("UTF-8")))
+                                authCipher.doFinal(args.value.toByteArray(Charset.forName("UTF-8")))
                             val iv = authCipher.iv  // Capture the initialization vector.
 
                             // Store the ciphertext and IV.
@@ -96,9 +109,9 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
                 })
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Authenticate to Store Secret")
-            .setSubtitle("Biometric authentication is required")
-            .setNegativeButtonText("Cancel")
+            .setTitle(args.promptTitle)
+            .setSubtitle(args.promptSubtitle)
+            .setNegativeButtonText(args.promptNegativeButtonText)
             .build()
 
         biometricPrompt.authenticate(promptInfo, cryptoObject)
@@ -140,13 +153,13 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     // Generate key, if it doesn't exist.
-    private fun generateBiometricProtectedKey() {
+    private fun generateBiometricProtectedKey(keyAlias: String) {
         val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        if (!keyStore.containsAlias(KEY_ALIAS)) {
+        if (!keyStore.containsAlias(keyAlias)) {
             val keyGenerator =
                 KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
             val keyGenParameterSpec = KeyGenParameterSpec.Builder(
-                KEY_ALIAS,
+                keyAlias,
                 KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
             )
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
@@ -161,7 +174,7 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     // Prepares and returns a Cipher instance for encryption using the key from the Keystore.
-    private fun getEncryptionCipher(): Cipher {
+    private fun getEncryptionCipher(keyAlias: String): Cipher {
         val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
 
         // ######## TODO: remove
@@ -169,7 +182,7 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
         Logger.warn("########## aliases:", aliases.toList().joinToString())
         // ###############
 
-        val secretKey = keyStore.getKey(KEY_ALIAS, null) as SecretKey
+        val secretKey = keyStore.getKey(keyAlias, null) as SecretKey
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, secretKey)
         return cipher
@@ -200,7 +213,7 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
         val (iv, ciphertext) = cipherData
 
         val cipher = try {
-            getDecryptionCipher(iv)
+            getDecryptionCipher(args.keyAlias, iv)
         } catch (e: Exception) {
             invoke.reject("Error initializing cipher: ${e.message}", "001")
             return
@@ -239,6 +252,7 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
 
         // Build the prompt info.
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            // TODO: read from args
             .setTitle("Biometric Authentication")
             .setSubtitle("Authenticate to decrypt your secret")
             .setNegativeButtonText("Cancel")
@@ -262,9 +276,9 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
         return Pair(iv, ciphertext)
     }
 
-    private fun getDecryptionCipher(iv: ByteArray): Cipher {
+    private fun getDecryptionCipher(keyAlias: String, iv: ByteArray): Cipher {
         val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        val secretKey = keyStore.getKey(KEY_ALIAS, null) as SecretKey
+        val secretKey = keyStore.getKey(keyAlias, null) as SecretKey
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         val spec = GCMParameterSpec(128, iv)
         cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
@@ -273,9 +287,10 @@ class KeystorePlugin(private val activity: Activity) : Plugin(activity) {
 
     @Command
     fun remove(invoke: Invoke) {
+        val args = invoke.parseArgs(RemoveRequest::class.java)
         try {
             val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-            keyStore.deleteEntry(KEY_ALIAS)
+            keyStore.deleteEntry(args.keyAlias)
             invoke.resolve()
         } catch (e: Exception) {
             invoke.reject("Could not delete entry from KeyStore: ${e.localizedMessage}")

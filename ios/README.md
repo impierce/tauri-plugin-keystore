@@ -1,3 +1,3 @@
-# Tauri Plugin keystore
+# Tauri Plugin Keystore - iOS
 
-A description of this package.
+Swift implementation that interacts with the iOS Keychain.
