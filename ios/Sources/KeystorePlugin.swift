@@ -7,6 +7,10 @@ import LocalAuthentication
 
 class StoreRequest: Decodable {
   let value: String
+//   var promptTitle: String?
+//   var promptSubtitle: String?
+//   var promptNegativeButtonText: String?
+  var cancelTitle: String?
 }
 
 class KeystorePlugin: Plugin {
@@ -30,7 +34,7 @@ class KeystorePlugin: Plugin {
     }
 
     // Build the keychain query. The account attribute here is used as the key to store/retrieve the secret.
-    let account = "com.impierce.identity-wallet.unime-dev"
+    let account = "com.impierce.identity-wallet.unime"
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
         kSecAttrAccount as String: account,
@@ -52,8 +56,9 @@ class KeystorePlugin: Plugin {
   }
 
   @objc public func retrieve(_ invoke: Invoke) throws {
-      let account = "com.impierce.identity-wallet.unime-dev"
+      let account = "com.impierce.identity-wallet.unime"
       let context = LAContext()
+      // TODO: read from args?
       context.localizedReason = "Access your UniMe password"
 
       let query: [String: Any] = [
@@ -82,7 +87,7 @@ class KeystorePlugin: Plugin {
   }
 
   @objc public func remove(_ invoke: Invoke) throws {
-      let account = "com.impierce.identity-wallet.unime-dev"
+      let account = "com.impierce.identity-wallet.unime"
       
       let query: [String: Any] = [
           kSecClass as String: kSecClassGenericPassword,
