@@ -62,9 +62,24 @@ Afterwards all the plugin's APIs are available through the JavaScript guest bind
 ```typescript
 import { remove, retrieve, store } from "@impierce/tauri-plugin-keystore";
 
-await store("secr3tPa$$w0rd");
-const password = await retrieve();
-await remove();
+// The first argument identifies the secret: a key alias on Android, a keychain
+// account on iOS. Storing and retrieving both require the user to authenticate.
+await store("password", "secr3tPa$$w0rd");
+
+const password = await retrieve("password"); // `null` if nothing is stored
+await remove("password");
+```
+
+The strings shown in the authentication prompt can be customised per call. Every
+field is optional and falls back to a platform default:
+
+```typescript
+await retrieve("password", {
+  title: "Unlock your wallet", // Android only
+  subtitle: "Confirm it's you", // Android only
+  cancelLabel: "Not now",
+  reason: "Access your saved password", // iOS only
+});
 ```
 
 The provided functions will fail if the device has no biometrics set up, so you should check the biometric status with the official `tauri-plugin-biometric` before using them:

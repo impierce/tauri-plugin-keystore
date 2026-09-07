@@ -5,102 +5,131 @@ import WebKit
 
 import LocalAuthentication
 
-class StoreRequest: Decodable {
-  let value: String
-//   var promptTitle: String?
-//   var promptSubtitle: String?
-//   var promptNegativeButtonText: String?
-  var cancelTitle: String?
+class Prompt: Decodable {
+  var title: String?
+  var subtitle: String?
+  var cancelLabel: String?
+  var reason: String?
 }
+
+class StoreRequest: Decodable {
+  let key: String
+  let value: String
+  var prompt: Prompt?
+}
+
+class RetrieveRequest: Decodable {
+  let key: String
+  var prompt: Prompt?
+}
+
+class RemoveRequest: Decodable {
+  let key: String
+}
+
+let DEFAULT_REASON = "Authenticate to access your secret"
 
 class KeystorePlugin: Plugin {
   @objc public func store(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(StoreRequest.self)
-      
+
     guard let secretData = args.value.data(using: .utf8) else {
-        throw NSError(domain: "StoreErrorDomain", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid secret string"])
+      throw NSError(
+        domain: "StoreErrorDomain", code: -1,
+        userInfo: [NSLocalizedDescriptionKey: "Invalid secret string"])
     }
 
-    // Create an access control object that requires user presence (biometrics or device passcode)
-    // and makes the item accessible only when the device is unlocked.
+    // Require user presence (biometrics or device passcode) and keep the item
+    // on this device only, readable while it is unlocked.
     var error: Unmanaged<CFError>?
-    guard let accessControl = SecAccessControlCreateWithFlags(
+    guard
+      let accessControl = SecAccessControlCreateWithFlags(
         nil,
         kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
         .userPresence,
         &error
-    ) else {
-        throw error!.takeRetainedValue() as Error
+      )
+    else {
+      throw error!.takeRetainedValue() as Error
     }
 
-    // Build the keychain query. The account attribute here is used as the key to store/retrieve the secret.
-    let account = "com.impierce.identity-wallet.unime"
+    // The caller's key is the keychain account, so each key addresses its own item.
     let query: [String: Any] = [
-        kSecClass as String: kSecClassGenericPassword,
-        kSecAttrAccount as String: account,
-        kSecAttrAccessControl as String: accessControl,
-        kSecValueData as String: secretData
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: args.key,
+      kSecAttrAccessControl as String: accessControl,
+      kSecValueData as String: secretData,
     ]
 
-    // Delete any existing item with this account.
-    SecItemDelete(query as CFDictionary)
-    
-    // Add the new item to the keychain.
+    // Replace any item already stored under this key.
+    SecItemDelete([
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: args.key,
+    ] as CFDictionary)
+
     let status = SecItemAdd(query as CFDictionary, nil)
     guard status == errSecSuccess else {
-        // throw KeychainError(status: status)
-        throw NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: nil)
+      throw NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: nil)
     }
 
     invoke.resolve()
   }
 
   @objc public func retrieve(_ invoke: Invoke) throws {
-      let account = "com.impierce.identity-wallet.unime"
-      let context = LAContext()
-      // TODO: read from args?
-      context.localizedReason = "Access your UniMe password"
+    let args = try invoke.parseArgs(RetrieveRequest.self)
 
-      let query: [String: Any] = [
-          kSecClass as String: kSecClassGenericPassword,
-          kSecAttrAccount as String: account,
-          kSecReturnData as String: true,
-          kSecUseAuthenticationContext as String: context,
-          // kSecUseOperationPrompt as String: "Authenticate to retrieve your secret"
-      ]
+    let context = LAContext()
+    context.localizedReason = args.prompt?.reason ?? DEFAULT_REASON
+    if let cancelLabel = args.prompt?.cancelLabel {
+      context.localizedCancelTitle = cancelLabel
+    }
 
-      var item: CFTypeRef?
-      let status = SecItemCopyMatching(query as CFDictionary, &item)
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: args.key,
+      kSecReturnData as String: true,
+      kSecUseAuthenticationContext as String: context,
+    ]
 
-      // Check the result of the query.
-      guard status == errSecSuccess else {
-          throw NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: nil)
-      }
+    var item: CFTypeRef?
+    let status = SecItemCopyMatching(query as CFDictionary, &item)
 
-      // Convert the returned data into a String.
-      guard let data = item as? Data,
-            let secret = String(data: data, encoding: .utf8) else {
-          throw NSError(domain: "com.impierce.identity-wallet", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to decode secret"])
-      }
+    // Nothing stored under this key is not an error.
+    if status == errSecItemNotFound {
+      invoke.resolve(["value": nil])
+      return
+    }
 
-      invoke.resolve(["value": secret])
+    guard status == errSecSuccess else {
+      throw NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: nil)
+    }
+
+    guard let data = item as? Data,
+      let secret = String(data: data, encoding: .utf8)
+    else {
+      throw NSError(
+        domain: "com.impierce.identity-wallet", code: -1,
+        userInfo: [NSLocalizedDescriptionKey: "Unable to decode secret"])
+    }
+
+    invoke.resolve(["value": secret])
   }
 
   @objc public func remove(_ invoke: Invoke) throws {
-      let account = "com.impierce.identity-wallet.unime"
-      
-      let query: [String: Any] = [
-          kSecClass as String: kSecClassGenericPassword,
-          kSecAttrAccount as String: account
-      ]
-      
-      let status = SecItemDelete(query as CFDictionary)
-      
-      guard status == errSecSuccess || status == errSecItemNotFound else {
-          throw NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: nil)
-      }
-      
-      invoke.resolve()
+    let args = try invoke.parseArgs(RemoveRequest.self)
+
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: args.key,
+    ]
+
+    let status = SecItemDelete(query as CFDictionary)
+
+    guard status == errSecSuccess || status == errSecItemNotFound else {
+      throw NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: nil)
+    }
+
+    invoke.resolve()
   }
 }
 
