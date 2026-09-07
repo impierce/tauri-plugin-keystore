@@ -25,21 +25,27 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Keystore<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Keystore<R> {
-    pub fn store(&self, payload: StoreRequest) -> crate::Result<()> {
+    // Each of these blocks on an authentication prompt for as long as the user
+    // takes to respond, so they use the async plugin API rather than occupying a
+    // runtime thread for the duration.
+    pub async fn store(&self, payload: StoreRequest) -> crate::Result<()> {
         self.0
-            .run_mobile_plugin("store", payload)
+            .run_mobile_plugin_async("store", payload)
+            .await
             .map_err(Into::into)
     }
 
-    pub fn retrieve(&self, payload: RetrieveRequest) -> crate::Result<RetrieveResponse> {
+    pub async fn retrieve(&self, payload: RetrieveRequest) -> crate::Result<RetrieveResponse> {
         self.0
-            .run_mobile_plugin("retrieve", payload)
+            .run_mobile_plugin_async("retrieve", payload)
+            .await
             .map_err(Into::into)
     }
 
-    pub fn remove(&self, payload: RemoveRequest) -> crate::Result<()> {
+    pub async fn remove(&self, payload: RemoveRequest) -> crate::Result<()> {
         self.0
-            .run_mobile_plugin("remove", payload)
+            .run_mobile_plugin_async("remove", payload)
+            .await
             .map_err(Into::into)
     }
 }
