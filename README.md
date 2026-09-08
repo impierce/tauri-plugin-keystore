@@ -39,7 +39,7 @@ _This also works for `npm` and `yarn`._
 ## Requirements
 
 - This plugin requires a **Rust version of 1.77.2 or higher**.
-- The minimum supported Tauri version is **2.0.0**.
+- The minimum supported Tauri version is **2.8.0**.
 - Android 9 (**API level 28**) and higher are supported.
 
 ## Usage

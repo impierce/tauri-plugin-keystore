@@ -5,7 +5,17 @@ authors = ["daniel-mader"]
 description = "Interact with the device-native key storage (Android Keystore, iOS Keychain)."
 edition = "2021"
 rust-version = "1.77.2"
-exclude = ["/dist-js", "/guest-js", "/node_modules", "/package.json", "/rollup.config.js", "/tsconfig.json"]
+exclude = [
+    "/.github",
+    "/.releaserc.yaml",
+    "/dist-js",
+    "/guest-js",
+    "/node_modules",
+    "/package.json",
+    "/pnpm-lock.yaml",
+    "/rollup.config.js",
+    "/tsconfig.json",
+]
 links = "tauri-plugin-keystore"
 repository = "https://github.com/impierce/tauri-plugin-keystore"
 license = "Apache-2.0"
@@ -23,7 +33,7 @@ android = { level = "full", notes = "" }
 ios = { level = "full", notes = "" }
 
 [dependencies]
-tauri = { version = "2" }
+tauri = { version = "2.8" }
 serde = "1.0"
 thiserror = "2"
 
