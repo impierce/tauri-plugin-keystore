@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-keystore"
-version = "2.1.0-alpha.1"
+version = "2.1.0-alpha.2"
 authors = ["daniel-mader"]
 description = "Interact with the device-native key storage (Android Keystore, iOS Keychain)."
 edition = "2021"
