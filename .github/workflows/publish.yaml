@@ -24,21 +24,18 @@ jobs:
     name: publish (npmjs.com)
     runs-on: ubuntu-latest
     permissions:
-      id-token: write # use of OIDC for npm provenance
+      id-token: write # required for npm trusted publishing (OIDC)
 
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v6
         with:
-          version: 10
+          version: 12
       - uses: actions/setup-node@v5
         with:
           node-version: "lts/*"
           registry-url: "https://registry.npmjs.org"
           cache: "pnpm"
       - run: pnpm install
-      - name: pnpm publish
-        run: pnpm publish --access public --no-git-checks
-        env:
-          NPM_CONFIG_PROVENANCE: true
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: pnpm stage publish
+        run: pnpm stage publish --access public --no-git-checks
